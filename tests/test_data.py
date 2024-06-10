@@ -29,6 +29,17 @@ def test_packed_sft_dataset():
     assert len(packed_sft_dataset) == len(expected_examples)
 
     for example, expected_example in zip(packed_sft_dataset, expected_examples):
+        if example["input_ids"].tolist() != expected_example["input_ids"]:
+            print('input_ids mismatch')
+            for i, (actual, expected) in enumerate(
+                zip(example["input_ids"].tolist(), expected_example["input_ids"])
+            ):
+                if actual != expected:
+                    logger.error(
+                        f"input_ids mismatch at index {i}: {actual} != {expected}"
+                    )
+        print(example["labels"].tolist() )
+        print(expected_example["labels"])
         assert example["input_ids"].tolist() == expected_example["input_ids"]
         assert example["labels"].tolist() == expected_example["labels"]
 

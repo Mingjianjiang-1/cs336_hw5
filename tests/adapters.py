@@ -7,7 +7,11 @@ from typing import Any
 import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-
+# from cs336_alignment.data_loader import get_batches, InstructionDataset
+from cs336_alignment.mmlu import parse_mmlu_response
+from cs336_alignment.gsm8k import parse_gsm8k_response
+from cs336_alignment.dpo_loss import per_instance_dpo_loss
+from cs336_alignment.data_loader import InstructionDataset, get_batches
 
 def get_packed_sft_dataset(
     tokenizer: PreTrainedTokenizerBase,
@@ -36,7 +40,7 @@ def get_packed_sft_dataset(
         "input_ids" contains the token IDs for the language modeling inputs, and "labels" contains
         the token IDs for the language modeling labels.
     """
-    raise NotImplementedError
+    return InstructionDataset(tokenizer, dataset_path, seq_length, shuffle)
 
 
 def run_iterate_batches(
@@ -59,7 +63,7 @@ def run_iterate_batches(
     Returns:
         Iterable over batches, where each batch has size `batch_size`.
     """
-    raise NotImplementedError
+    return get_batches(dataset, batch_size, shuffle)
 
 
 def run_parse_mmlu_response(
@@ -85,7 +89,7 @@ def run_parse_mmlu_response(
         str (one of "A", "B", "C", or "D") if the model output can be parsed into a prediction,
         else None.
     """
-    raise NotImplementedError
+    return parse_mmlu_response(model_output)
 
 
 def run_parse_gsm8k_response(
@@ -102,7 +106,7 @@ def run_parse_gsm8k_response(
         str with the predicted numeric answer if the model output can be parsed into a prediction,
         else None.
     """
-    raise NotImplementedError
+    return parse_gsm8k_response(model_output)
 
 
 def compute_per_instance_dpo_loss(
@@ -137,4 +141,4 @@ def compute_per_instance_dpo_loss(
     Returns:
         torch.Tensor with the DPO loss for this example.
     """
-    raise NotImplementedError
+    return per_instance_dpo_loss(lm, lm_ref, tokenizer, prompt, response_chosen, response_rejected)
