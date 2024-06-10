@@ -27,7 +27,7 @@ class InstructionDataset(Dataset):
             with gzip.open(dataset_path, 'rt', encoding='utf-8') as f:
                 for line in f:
                     self.data.append(json.loads(line))
-        # self.data = self.data[:100]
+        self.data = self.data[:100]
         print('EOT token:', self.tokenizer.eos_token)
         print('EOT token ID:', self.tokenizer.eos_token_id)
         print('BOS token:', self.tokenizer.bos_token)
@@ -41,16 +41,10 @@ class InstructionDataset(Dataset):
             random.shuffle(self.data)
         
         for i, item in enumerate(self.data):
-            # formatted_text = ''
-            # if i == 0:
-            #     formatted_text = self.tokenizer.bos_token
             prompt = item['prompt']
             response = item['response']
             formatted_text = self.alpaca_template.format(instruction=prompt, response=response)
             tokenized_text = self.tokenizer(self.tokenizer.bos_token + formatted_text + self.tokenizer.eos_token, return_tensors='pt', add_special_tokens=False)
-
-            # formatted_text += self.alpaca_template.format(instruction=prompt, response=response)
-            # tokenized_text = self.tokenizer(formatted_text + self.tokenizer.eos_token, return_tensors='pt', add_special_tokens=False)
             self.token_lengths.append(len(tokenized_text['input_ids'][0]))
 
         self.total_length = sum(self.token_lengths)
@@ -79,15 +73,11 @@ class InstructionDataset(Dataset):
                 
                 prompt = self.data[i]['prompt']
                 response = self.data[i]['response']
-                # formatted_text = ''
-                # if i == 0:
-                #     formatted_text = self.tokenizer.bos_token
                 formatted_text = self.alpaca_template.format(instruction=prompt, response=response)
                 tokenized_text = self.tokenizer(self.tokenizer.bos_token + formatted_text + self.tokenizer.eos_token, return_tensors='pt', add_special_tokens=False)['input_ids'][0]
                 token_sequences.append(tokenized_text[token_start_idx:token_end_idx])
                 labels_sequence = tokenized_text[token_start_idx+1:token_end_idx+1]
                 if token_end_idx == length:
-                    # labels_sequence.append(self.tokenizer.bos_token_id)
                     labels_sequence = torch.cat((labels_sequence, torch.tensor([self.tokenizer.bos_token_id])))
                 labels_sequences.append(labels_sequence)
             

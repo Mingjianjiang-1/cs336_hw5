@@ -10,6 +10,7 @@ import random
 import json
 import gzip
 import argparse
+import os
 
 def train(model, tokenizer, train_loader, optimizer, scheduler, device, args):
     model.train()
@@ -33,7 +34,7 @@ def train(model, tokenizer, train_loader, optimizer, scheduler, device, args):
                 total_loss = 0.0
                 
                 # Log training loss
-                wandb.log({"train_loss": total_loss}, step=epoch * len(train_loader) + step)
+                # wandb.log({"train_loss": total_loss}, step=epoch * len(train_loader) + step)
         
         # # Validate after each epoch
         # validate(model, val_loader, device, epoch)
@@ -83,7 +84,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
+        # attn_implementation="flash_attention_2",
     ).to(device)
     
     # Load the dataset
@@ -102,4 +103,15 @@ def main():
     train(model, tokenizer, train_loader, optimizer, scheduler, device, args)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    # Load the fine-tuned tokenizer and model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    tokenizer = AutoTokenizer.from_pretrained('/home/c-jiangm/spring2024-assignment5-alignment/cs336_alignment/models/sft/')
+    model = AutoModelForCausalLM.from_pretrained('/home/c-jiangm/spring2024-assignment5-alignment/cs336_alignment/models/sft/').to(device)
+    
+    model.eval()
+    
+    # Generate text
+    prompt = "How do you make a cake?"
+    inputs = tokenizer(prompt, return_tensors='pt').to(device)
+    outputs = model.generate(**inputs, max_length=512, num_return_sequences=5, temperature=0.9)
